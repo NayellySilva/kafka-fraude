@@ -26,7 +26,22 @@ def verificar_fraudes(conexao, t):
     momento = datetime.fromisoformat(t["timestamp"])
     if t["amount"] >= 10000:
         fraudes.append("ALTO_VALOR")
+        
+    inicio = (momento - timedelta(seconds=60)).isoformat(timespec="seconds")
+    anteriores = conexao.execute(
+        "SELECT COUNT(*) FROM transacoes WHERE client_id = ? AND timestamp > ?",
+        (t["client_id"], inicio),
+    ).fetchone()[0]
+    if anteriores + 1 >= 4:
+        fraudes.append("TEMPO_60s")
     
+    inicio = (momento - timedelta(minutes=10)).isoformat(timespec="seconds")
+    outra_cidade = conexao.execute(
+        "SELECT COUNT(*) FROM transacoes WHERE client_id = ? AND timestamp >= ? AND city <> ?",
+        (t["client_id"], inicio, t["city"]),
+    ).fetchone()[0]
+    if outra_cidade > 0:
+        fraudes.append("GEO_10m")
     return fraudes
 
 def salvar(conexao, t, status):
