@@ -24,6 +24,9 @@ def criar_banco():
 def verificar_fraudes(conexao, t):
     fraudes = []
     momento = datetime.fromisoformat(t["timestamp"])
+    if t["amount"] >= 10000:
+        fraudes.append("ALTO_VALOR")
+    
     return fraudes
 
 def salvar(conexao, t, status):
